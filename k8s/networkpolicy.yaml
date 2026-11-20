@@ -1,0 +1,37 @@
+# 1) Tout est interdit par defaut dans le namespace (entrant et sortant)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: tp4
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# 2) Flux strictement necessaires a l'application
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tp4-app
+  namespace: tp4
+spec:
+  podSelector:
+    matchLabels: {app: tp4-app}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # uniquement les pods du namespace ingress-nginx, sur le port de l'API
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ingress-nginx}
+      ports:
+        - {protocol: TCP, port: 8000}
+  egress:
+    # uniquement la resolution DNS via CoreDNS (route /diagnostic/dns)
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+          podSelector:
+            matchLabels: {k8s-app: kube-dns}
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}

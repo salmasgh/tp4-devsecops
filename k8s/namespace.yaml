@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: tp4
+  labels:
+    # Pod Security Admission : profil "restricted" impose par l'API server
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

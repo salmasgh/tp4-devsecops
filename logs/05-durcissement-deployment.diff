@@ -1,0 +1,86 @@
+diff --git a/k8s/deployment.yaml b/k8s/deployment.yaml
+index 4ff1d99..7bcce6a 100644
+--- a/k8s/deployment.yaml
++++ b/k8s/deployment.yaml
+@@ -1,9 +1,21 @@
++apiVersion: v1
++kind: ServiceAccount
++metadata:
++  name: tp4-app
++  namespace: tp4
++automountServiceAccountToken: false   # l'application n'appelle pas l'API Kubernetes
++---
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: tp4-app
+   namespace: tp4
+   labels: {app: tp4-app}
++  annotations:
++    # Le manifeste du depot porte une version immuable ; le job CI "deploy-manifest"
++    # remplace la reference par le digest sha256 de l'image signee, et Kyverno
++    # (verifyImages, verifyDigest) refuse toute image non referencee par digest.
++    checkov.io/skip1: CKV_K8S_43=digest injecte par la CI et impose par Kyverno
+ spec:
+   replicas: 1
+   selector:
+@@ -12,18 +24,53 @@ spec:
+     metadata:
+       labels: {app: tp4-app}
+     spec:
++      serviceAccountName: tp4-app
++      automountServiceAccountToken: false
++      securityContext:
++        runAsNonRoot: true
++        runAsUser: 10001
++        runAsGroup: 10001
++        fsGroup: 10001
++        seccompProfile: {type: RuntimeDefault}
+       containers:
+         - name: app
+-          image: ghcr.io/salmasgh/tp4-devsecops:latest
++          image: ghcr.io/salmasgh/tp4-devsecops:1.0.0   # version immuable, plus de :latest
++          imagePullPolicy: Always
+           ports:
+             - containerPort: 8000
+           env:
+-            - name: SECRET_KEY
+-              valueFrom:
+-                secretKeyRef: {name: tp4-app-secrets, key: secret-key}   # Secret dechiffre par SOPS
++            # Seul le CHEMIN du secret est passe, jamais sa valeur
++            - name: SECRET_KEY_FILE
++              value: /run/secrets/app/secret-key
++          volumeMounts:
++            - {name: app-secrets, mountPath: /run/secrets/app, readOnly: true}
++            - {name: data, mountPath: /data}
++            - {name: tmp, mountPath: /tmp}
+           securityContext:
+-            runAsUser: 0
+-            privileged: true
++            runAsNonRoot: true
++            runAsUser: 10001
++            privileged: false
++            allowPrivilegeEscalation: false
++            readOnlyRootFilesystem: true
++            capabilities: {drop: ["ALL"]}
++          resources:
++            requests: {cpu: 50m, memory: 64Mi}
++            limits: {cpu: 500m, memory: 256Mi}
++          readinessProbe:
++            httpGet: {path: /health, port: 8000}
++            initialDelaySeconds: 2
++          livenessProbe:
++            httpGet: {path: /health, port: 8000}
++            initialDelaySeconds: 5
++      volumes:
++        - name: app-secrets
++          secret:
++            secretName: tp4-app-secrets   # dechiffre par SOPS au deploiement
++            defaultMode: 0400
++        - name: data
++          emptyDir: {sizeLimit: 64Mi}
++        - name: tmp
++          emptyDir: {medium: Memory, sizeLimit: 16Mi}
+ ---
+ apiVersion: v1
+ kind: Service
