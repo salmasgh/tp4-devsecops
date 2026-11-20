@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 # ---- Étape 2 : image d'exécution minimale ----
 FROM python:3.12-alpine@sha256:c5ba3deef00c7758561a0f03c26f44f10589263d40e732b8748e0d1f38f6dd89
 LABEL org.opencontainers.image.title="tp4-app" \
+      org.opencontainers.image.source="https://github.com/salmasgh/tp4-devsecops" \
       org.opencontainers.image.description="API FastAPI durcie - TP4 DevSecOps"
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

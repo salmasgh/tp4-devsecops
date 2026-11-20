@@ -71,3 +71,150 @@ jobs:
           path: |
             trivy-iac.json
             checkov.json
+
+  # ---------------------------------------------------------------
+  # Contrôles applicatifs (acquis des TP précédents) : tests, SAST, SCA
+  # ---------------------------------------------------------------
+  sast-sca:
+    name: tests + SAST (Bandit) + SCA (pip-audit)
+    needs: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dépendances
+        run: pip install -r requirements.txt pytest httpx bandit pip-audit
+      - name: Tests unitaires
+        run: pytest -q
+      - name: "Gate SAST : Bandit (sévérité HIGH)"
+        run: bandit -r . -x ./tests --severity-level high --confidence-level medium -q
+      - name: "Gate SCA : pip-audit (CVE connues dans les dépendances)"
+        run: pip-audit -r requirements.txt
+
+  # ---------------------------------------------------------------
+  # Étape 3 : build, scan d'image, push, SBOM (Syft) et signature (Cosign)
+  # ---------------------------------------------------------------
+  build-sign:
+    name: build + scan image + SBOM + signature Cosign
+    needs: [iac-scan, sast-sca]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write           # push sur ghcr.io avec le GITHUB_TOKEN
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+      VERSION: "1.0.0"
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build de l'image
+        run: docker build -t "$IMAGE:$VERSION" -t "$IMAGE:sha-${GITHUB_SHA::7}" .
+
+      - name: "Gate image : Trivy (HIGH/CRITICAL) avant tout push"
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/out aquasec/trivy:0.76.2 \
+            image --no-progress --scanners vuln -f json -o /out/trivy-image.json "$IMAGE:$VERSION"
+          python3 .github/scripts/summary.py image trivy-image.json "$IMAGE:$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2 \
+            image --no-progress --scanners vuln --severity HIGH,CRITICAL --exit-code 1 "$IMAGE:$VERSION"
+
+      - name: Connexion au registre ghcr.io
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push de l'image et récupération du digest
+        id: push
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push "$IMAGE:$VERSION"
+          docker push "$IMAGE:sha-${GITHUB_SHA::7}"
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION" | cut -d@ -f2)
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "Image poussée : $IMAGE@$DIGEST"
+
+      - name: SBOM CycloneDX avec Syft
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/out anchore/syft:v1.57.1 \
+            docker:"$IMAGE:$VERSION" -o cyclonedx-json=/out/sbom.cdx.json -o spdx-json=/out/sbom.spdx.json
+          python3 .github/scripts/summary.py sbom sbom.cdx.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: SBOM conservé comme artefact de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: |
+            sbom.cdx.json
+            sbom.spdx.json
+
+      - uses: sigstore/cosign-installer@v3
+        if: steps.push.outputs.digest != ''
+        with:
+          cosign-release: v2.5.0
+
+      - name: Signature Cosign de l'image (par digest) et attestation SBOM
+        if: steps.push.outputs.digest != ''
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          REF: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+        run: |
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "$REF"
+          cosign attest --yes --key env://COSIGN_PRIVATE_KEY --type cyclonedx --predicate sbom.cdx.json "$REF"
+
+      - name: Vérification de la signature avec la clé publique
+        if: steps.push.outputs.digest != ''
+        env:
+          REF: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+        run: |
+          cosign verify --key cosign.pub "$REF" | tee verify.json
+          cosign verify-attestation --key cosign.pub --type cyclonedx "$REF" > /dev/null
+          {
+            echo "## Signature Cosign"
+            echo
+            echo "- Image signée : \`$REF\`"
+            echo "- Signature vérifiée avec \`cosign.pub\` : :white_check_mark:"
+            echo "- Attestation SBOM CycloneDX attachée et vérifiée : :white_check_mark:"
+            echo "- Entrée Rekor (journal de transparence) : index \`$(jq -r '.[0].optional.Bundle.Payload.logIndex' verify.json)\`"
+            echo "- Tags associés dans le registre : \`$(cosign triangulate "$REF")\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------
+  # Manifeste de déploiement : l'image est référencée par son digest signé
+  # ---------------------------------------------------------------
+  deploy-manifest:
+    name: manifeste de déploiement (image par digest)
+    needs: build-sign
+    if: needs.build-sign.outputs.digest != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Injection du digest signé dans le Deployment
+        env:
+          REF: ghcr.io/${{ github.repository }}@${{ needs.build-sign.outputs.digest }}
+        run: |
+          mkdir -p deploy
+          sed -E "s#image: ghcr.io/[^ ]+#image: $REF#" k8s/deployment.yaml > deploy/deployment.yaml
+          cp k8s/namespace.yaml k8s/networkpolicy.yaml k8s/secret.enc.yaml deploy/
+          {
+            echo "## Manifeste de déploiement"
+            echo
+            echo "Image : \`$REF\`"
+            echo
+            echo '```bash'
+            echo "kubectl apply -f namespace.yaml -f networkpolicy.yaml"
+            echo "sops -d secret.enc.yaml | kubectl apply -f -"
+            echo "kubectl apply -f deployment.yaml"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-manifests
+          path: deploy/
