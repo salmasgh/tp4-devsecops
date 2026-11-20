@@ -49,7 +49,7 @@ spec:
           securityContext:
             runAsNonRoot: true
             runAsUser: 10001
-            privileged: false
+            privileged: true
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities: {drop: ["ALL"]}
