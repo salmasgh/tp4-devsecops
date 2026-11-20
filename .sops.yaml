@@ -1,0 +1,7 @@
+# SOPS : seules les valeurs des champs data/stringData sont chiffrees (AES-256-GCM),
+# la cle de donnees est chiffree pour la cle publique age ci-dessous.
+# La cle privee age reste hors du depot (%APPDATA%\sops\age\keys.txt).
+creation_rules:
+  - path_regex: .*\.enc\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1894eaud5fau50n6vxr695rzppglysm5s9zds8pd7grv3xcy0qpsqj493eh

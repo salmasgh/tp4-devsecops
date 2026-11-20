@@ -20,7 +20,7 @@ spec:
           env:
             - name: SECRET_KEY
               valueFrom:
-                secretKeyRef: {name: tp4-app-secrets, key: secret-key}
+                secretKeyRef: {name: tp4-app-secrets, key: secret-key}   # Secret dechiffre par SOPS
           securityContext:
             runAsUser: 0
             privileged: true

@@ -29,9 +29,9 @@ def secret_source(name: str) -> str:
     return "env" if os.environ.get(name) else "absent"
 
 
-# Cle d'API du service de diagnostic DNS (fournie par l'equipe ops)
-API_KEY = "***CLE-REVOQUEE***"
-SECRET_KEY = load_secret("SECRET_KEY") or API_KEY
+# Aucun secret dans le code : la cle d'API est fournie au demarrage par un
+# Secret Kubernetes (dechiffre par SOPS au deploiement) monte en fichier
+SECRET_KEY = load_secret("SECRET_KEY")
 HOSTNAME_RE = re.compile(r"^[A-Za-z0-9.-]{1,253}$")
 
 DB_PATH = os.environ.get("DB_PATH", "app.db")
