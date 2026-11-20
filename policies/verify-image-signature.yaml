@@ -1,0 +1,47 @@
+# Politique 1 : toute image deployee dans le namespace tp4 doit etre signee
+# par la cle Cosign du pipeline CI (et porter l'attestation SBOM CycloneDX).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-image-signature
+  annotations:
+    policies.kyverno.io/title: Images signees par la CI uniquement
+    policies.kyverno.io/severity: high
+spec:
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-cosign-signature
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [tp4]
+      verifyImages:
+        - imageReferences: ["*"]        # aucune exception : toutes les images
+          failureAction: Enforce        # bloquant
+          required: true
+          mutateDigest: true            # tag -> digest verifie (immuable)
+          verifyDigest: true
+          attestors:
+            - entries:
+                - keys:
+                    publicKeys: |-
+                      -----BEGIN PUBLIC KEY-----
+                      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtHrTz2Ss6tn9vZzTjzVKwjhEDrLZ
+                      fkk3WWKD74nUSXrcciCmEkNd2cYlmIce4AOmqrwldC6ryE224IlkJX+7cA==
+                      -----END PUBLIC KEY-----
+                    rekor:
+                      url: https://rekor.sigstore.dev   # signature inscrite au journal de transparence
+          attestations:
+            - type: https://cyclonedx.org/bom   # SBOM attache a l'image par la CI
+              attestors:
+                - entries:
+                    - keys:
+                        publicKeys: |-
+                          -----BEGIN PUBLIC KEY-----
+                          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtHrTz2Ss6tn9vZzTjzVKwjhEDrLZ
+                          fkk3WWKD74nUSXrcciCmEkNd2cYlmIce4AOmqrwldC6ryE224IlkJX+7cA==
+                          -----END PUBLIC KEY-----
+                        rekor:
+                          url: https://rekor.sigstore.dev

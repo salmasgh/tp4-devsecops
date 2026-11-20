@@ -1,0 +1,23 @@
+$ docker build -q -t ttl.sh/tp4-devsecops-25b642229dce:2h .
+sha256:1df185ccfeb451ff370dff8bf8475c4003cb239b5fe59ef379a6a3592c34e133
+$ docker push -q ttl.sh/tp4-devsecops-25b642229dce:2h
+ttl.sh/tp4-devsecops-25b642229dce:2h
+$ cosign tree ttl.sh/tp4-devsecops-25b642229dce:2h
+📦 Supply Chain Security Related artifacts for an image: ttl.sh/tp4-devsecops-25b642229dce:2h
+No Supply Chain Security Related Artifacts found for image ttl.sh/tp4-devsecops-25b642229dce:2h,
+ start creating one with simply running$ cosign sign <img>
+$ grep 'image:' tests/k8s/deploy-manuel.yaml
+          image: ttl.sh/tp4-devsecops-25b642229dce:2h
+$ kubectl apply -f tests/k8s/deploy-manuel.yaml
+Error from server: error when creating "tests/k8s/deploy-manuel.yaml": admission webhook "mutate.kyverno.svc-fail" denied the request: 
+
+resource Deployment/tp4/tp4-app-manuel was blocked due to the following policies 
+
+verify-image-signature:
+  autogen-verify-cosign-signature: 'failed to verify image ttl.sh/tp4-devsecops-25b642229dce:2h: .attestors[0].entries[0].keys: no signatures found'
+$ kubectl get deploy,pods -n tp4
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/tp4-app   1/1     1            1           2m45s
+
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/tp4-app-647b7884c5-kqcm9   1/1     Running   0          2m44s

@@ -1,0 +1,13 @@
+diff --git a/k8s/deployment.yaml b/k8s/deployment.yaml
+index 7bcce6a..8ccfd64 100644
+--- a/k8s/deployment.yaml
++++ b/k8s/deployment.yaml
+@@ -49,7 +49,7 @@ spec:
+           securityContext:
+             runAsNonRoot: true
+             runAsUser: 10001
+-            privileged: false
++            privileged: true
+             allowPrivilegeEscalation: false
+             readOnlyRootFilesystem: true
+             capabilities: {drop: ["ALL"]}

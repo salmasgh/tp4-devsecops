@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tp4-app-root
+  namespace: tp4
+  labels: {app: tp4-app}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: tp4-app}
+  template:
+    metadata:
+      labels: {app: tp4-app}
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e
+          ports:
+            - containerPort: 8000
+          securityContext:
+            runAsUser: 0
+            privileged: true

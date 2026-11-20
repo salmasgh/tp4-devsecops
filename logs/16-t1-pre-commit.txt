@@ -1,0 +1,42 @@
+$ cat config_s3.py
+"""Configuration du stockage S3 (TEST T1 : fausse cle AWS)."""
+AWS_ACCESS_KEY_ID = "AKIAFU5A************"
+AWS_SECRET_ACCESS_KEY = "vk+x************************************"
+AWS_REGION = "eu-west-3"
+$ git add config_s3.py
+$ git commit -m "feat: configuration du stockage S3"
+Detect hardcoded secrets.................................................Failed
+- hook id: gitleaks
+- exit code: 1
+
+○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+Finding:     ...WS_ACCESS_KEY_ID = "REDACTED
+Secret:      REDACTED
+RuleID:      aws-access-token
+Entropy:     3.821928
+File:        config_s3.py
+Line:        2
+Fingerprint: config_s3.py:aws-access-token:2
+
+Finding:     AWS_SECRET_ACCESS_KEY = "REDACTED"
+Secret:      REDACTED
+RuleID:      generic-api-key
+Entropy:     4.884184
+File:        config_s3.py
+Line:        3
+Fingerprint: config_s3.py:generic-api-key:3
+
+1:18PM INF 0 commits scanned.
+1:18PM INF scanned ~198 bytes (198 bytes) in 93.4ms
+1:18PM WRN leaks found: 2
+
+detect private key.......................................................Passed
+check for added large files..............................................Passed
+(code retour : 1)
+$ git log --oneline -1
+1b71509 ci: build, gate Trivy image, push ghcr.io, SBOM Syft (CycloneDX/SPDX), signature et attestation Cosign, manifeste par digest

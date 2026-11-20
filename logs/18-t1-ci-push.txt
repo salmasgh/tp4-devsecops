@@ -1,0 +1,10 @@
+$ cat config_cloud.py
+"""Configuration du fournisseur cloud (TEST T1 : fausse cle d'API)."""
+CLOUD_API_TOKEN = "tiIR************************************"
+CLOUD_REGION = "eu-west-3"
+$ git commit --no-verify -m "feat: configuration du fournisseur cloud"   # hook contourné
+e01240e feat: configuration du fournisseur cloud
+$ git push -u origin test/t1-fuite-cle-cloud
+branch 'test/t1-fuite-cle-aws' set up to track 'origin/test/t1-fuite-cle-cloud'.
+To https://github.com/salmasgh/tp4-devsecops.git
+ * [new branch]      HEAD -> test/t1-fuite-cle-cloud

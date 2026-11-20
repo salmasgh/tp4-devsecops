@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-latest
+  namespace: tp4
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/salmasgh/tp4-devsecops:latest
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        privileged: false
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: {drop: ["ALL"]}
+      resources:
+        limits: {cpu: 100m, memory: 64Mi}

@@ -1,0 +1,16 @@
+$ grep -n 'image:' tests/k8s/pod-latest.yaml
+9:      image: ghcr.io/salmasgh/tp4-devsecops:latest
+$ kubectl apply -f tests/k8s/pod-latest.yaml
+Error from server: error when creating "tests/k8s/pod-latest.yaml": admission webhook "mutate.kyverno.svc-fail" denied the request: 
+
+resource Pod/tp4/pod-latest was blocked due to the following policies 
+
+verify-image-signature:
+  verify-cosign-signature: 'failed to verify image ghcr.io/salmasgh/tp4-devsecops:latest: .attestors[0].entries[0].keys: image tag not found: GET https://ghcr.io/v2/salmasgh/tp4-devsecops/manifests/latest: MANIFEST_UNKNOWN: manifest unknown'
+$ kyverno apply policies/pod-hardening.yaml --resource tests/k8s/pod-latest.yaml
+
+Applying 15 policy rule(s) to 1 resource(s)...
+policy pod-hardening -> resource tp4/Pod/pod-latest failed:
+1 - disallow-latest-tag validation failure: Tag mutable interdit : l'image doit avoir une version immuable ou un digest (pas de :latest).
+
+pass: 4, fail: 1, warn: 0, error: 0, skip: 0 

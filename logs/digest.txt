@@ -1,0 +1,1 @@
+ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e

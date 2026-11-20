@@ -1,0 +1,28 @@
+$ kubectl config current-context
+minikube
+$ kubectl get clusterpolicy
+NAME                     ADMISSION   BACKGROUND   READY   AGE    MESSAGE
+pod-hardening            true        true         True    108s   Ready
+verify-image-signature   true        false        True    108s   Ready
+$ kubectl apply -f namespace.yaml -f networkpolicy.yaml
+namespace/tp4 created
+networkpolicy.networking.k8s.io/default-deny-all created
+networkpolicy.networking.k8s.io/tp4-app created
+$ sops -d secret.enc.yaml | kubectl apply -f -
+secret/tp4-app-secrets created
+$ grep 'image:' deployment.yaml
+          image: ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e   # version immuable, plus de :latest
+$ kubectl apply -f deployment.yaml
+serviceaccount/tp4-app created
+deployment.apps/tp4-app created
+service/tp4-app created
+$ kubectl rollout status deploy/tp4-app -n tp4 --timeout=240s
+Waiting for deployment "tp4-app" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "tp4-app" rollout to finish: 0 of 1 updated replicas are available...
+deployment "tp4-app" successfully rolled out
+$ kubectl get pods -n tp4
+NAME                       READY   STATUS    RESTARTS   AGE
+tp4-app-647b7884c5-kqcm9   1/1     Running   0          20s
+$ kubectl get pod -n tp4 -l app=tp4-app -o jsonpath='{.items[0].spec.containers[0].image}{"\n"}{.items[0].metadata.annotations.kyverno\.io/verify-images}{"\n"}'
+ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e
+{"ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e":"pass"}

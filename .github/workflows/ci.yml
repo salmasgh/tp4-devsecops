@@ -17,20 +17,20 @@ jobs:
     name: secret-scan (Gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
-          fetch-depth: 0            # historique complet, pas seulement le dernier commit
+          fetch-depth: 0            # historique complet de la branche, pas seulement le dernier commit
       - name: Gitleaks - analyse de tout l'historique des commits
         run: |
           docker run --rm -v "$PWD":/repo -w /repo zricethezav/gitleaks:v8.30.1 \
-            git --config .gitleaks.toml --redact --verbose \
+            git --config .gitleaks.toml --log-opts=HEAD --redact --verbose \
             --report-format json --report-path gitleaks-report.json .
       - name: Résumé Gitleaks (rapport du job)
         if: always()
         run: python3 .github/scripts/summary.py gitleaks gitleaks-report.json >> "$GITHUB_STEP_SUMMARY"
       - name: Rapport Gitleaks
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gitleaks-report
           path: gitleaks-report.json
@@ -45,7 +45,7 @@ jobs:
     needs: secret-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Rapports Trivy config et Checkov (JSON)
         run: |
           docker run --rm -v "$PWD":/repo -w /repo aquasec/trivy:0.76.2 \
@@ -65,7 +65,7 @@ jobs:
             -d k8s --framework kubernetes --compact
       - name: Rapports IaC
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: iac-reports
           path: |
@@ -80,8 +80,8 @@ jobs:
     needs: secret-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Dépendances
@@ -109,7 +109,7 @@ jobs:
     outputs:
       digest: ${{ steps.push.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Build de l'image
         run: docker build -t "$IMAGE:$VERSION" -t "$IMAGE:sha-${GITHUB_SHA::7}" .
@@ -147,7 +147,7 @@ jobs:
           python3 .github/scripts/summary.py sbom sbom.cdx.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: SBOM conservé comme artefact de build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sbom
           path: |
@@ -195,13 +195,13 @@ jobs:
     if: needs.build-sign.outputs.digest != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Injection du digest signé dans le Deployment
         env:
           REF: ghcr.io/${{ github.repository }}@${{ needs.build-sign.outputs.digest }}
         run: |
           mkdir -p deploy
-          sed -E "s#image: ghcr.io/[^ ]+#image: $REF#" k8s/deployment.yaml > deploy/deployment.yaml
+          sed -E "s#image: ghcr.io/.*#image: $REF   \# digest signe par la CI#" k8s/deployment.yaml > deploy/deployment.yaml
           cp k8s/namespace.yaml k8s/networkpolicy.yaml k8s/secret.enc.yaml deploy/
           {
             echo "## Manifeste de déploiement"
@@ -214,7 +214,7 @@ jobs:
             echo "kubectl apply -f deployment.yaml"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: deploy-manifests
           path: deploy/

@@ -1,0 +1,11 @@
+$ curl -s http://127.0.0.1:18080/health
+{"status":"ok","secret_key_loaded":true,"secret_key_source":"fichier","secret_key_sha256":"8c999bb1c857"}
+
+$ sha256sum secrets/secret-key | cut -c1-12
+8c999bb1c857
+$ kubectl get events -n tp4 --field-selector reason=PolicyApplied -o custom-columns=OBJET:.involvedObject.name,MESSAGE:.message | head -5
+OBJET   MESSAGE
+$ kubectl get policyreport -n tp4
+NAME                                   KIND         NAME                       PASS   FAIL   WARN   ERROR   SKIP   AGE
+4c10bdce-4f8c-4df0-9eaa-c018dee55cdf   Deployment   tp4-app                    6      0      0      0       0      14s
+bca12166-c3b9-4e2d-ab7f-764a58252171   Pod          tp4-app-647b7884c5-kqcm9   6      0      0      0       0      13s

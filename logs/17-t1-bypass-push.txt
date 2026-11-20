@@ -1,0 +1,70 @@
+$ git commit --no-verify -m "feat: configuration du stockage S3"
+7caf4ec feat: configuration du stockage S3
+$ git push -u origin test/t1-fuite-cle-aws
+remote: error: GH013: Repository rule violations found for refs/heads/test/t1-fuite-cle-aws.        
+remote: 
+remote: - GITHUB PUSH PROTECTION        
+remote:   —————————————————————————————————————————        
+remote:     Resolve the following violations before pushing again        
+remote: 
+remote:     - Push cannot contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn how to resolve a blocked push        
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push        
+remote:             
+remote:             
+remote:       —— Amazon AWS Access Key ID ——————————————————————————        
+remote:        locations:        
+remote:          - commit: 7caf4ec158e22269ffc6267b01ed5aefd9507833        
+remote:            path: config_s3.py:2        
+remote:             
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.        
+remote:        https://github.com/salmasgh/tp4-devsecops/security/secret-scanning/unblock-secret/3MN3M2JPcG9Jk9QfyiMIvfnTTcH        
+remote:             
+remote:             
+remote:       —— Amazon AWS Secret Access Key ——————————————————————        
+remote:        locations:        
+remote:          - commit: 7caf4ec158e22269ffc6267b01ed5aefd9507833        
+remote:            path: config_s3.py:3        
+remote:             
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.        
+remote:        https://github.com/salmasgh/tp4-devsecops/security/secret-scanning/unblock-secret/3MN3M1Of9wcAoQqfJtWp8uiUZkU        
+remote:             
+remote: 
+remote: 
+To https://github.com/salmasgh/tp4-devsecops.git
+ ! [remote rejected] test/t1-fuite-cle-aws -> test/t1-fuite-cle-aws (error: GH013: Repository rule violations found for refs/heads/test/t1-fuite-cle-aws.
+
+- GITHUB PUSH PROTECTION
+  —————————————————————————————————————————
+    Resolve the following violations before pushing again
+
+    - Push cannot contain secrets
+
+    
+     (?) Learn how to resolve a blocked push
+     https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+    
+    
+      —— Amazon AWS Access Key ID ——————————————————————————
+       locations:
+         - commit: 7caf4ec158e22269ffc6267b01ed5aefd9507833
+           path: config_s3.py:2
+    
+       (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+       https://github.com/salmasgh/tp4-devsecops/security/secret-scanning/unblock-secret/3MN3M2JPcG9Jk9QfyiMIvfnTTcH
+    
+    
+      —— Amazon AWS Secret Access Key ——————————————————————
+       locations:
+         - commit: 7caf4ec158e22269ffc6267b01ed5aefd9507833
+           path: config_s3.py:3
+    
+       (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+       https://github.com/salmasgh/tp4-devsecops/security/secret-scanning/unblock-secret/3MN3M1Of9wcAoQqfJtWp8uiUZkU
+    
+
+
+)
+error: failed to push some refs to 'https://github.com/salmasgh/tp4-devsecops.git'

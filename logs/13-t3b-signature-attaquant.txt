@@ -1,0 +1,41 @@
+$ cosign generate-key-pair --output-key-prefix attacker
+Private key written to attacker.key
+Public key written to attacker.pub
+$ cosign sign --yes --key secrets/attacker.key --tlog-upload=false --new-bundle-format=false --use-signing-config=false ttl.sh/tp4-devsecops-25b642229dce:2h
+Flag --tlog-upload has been deprecated, prefer using a --signing-config file with no transparency log services
+Flag --new-bundle-format has been deprecated, this will be the only supported format in future versions
+Flag --use-signing-config has been deprecated, an offline signing flag will be added in the future; TUF will continue to provide a signing config by default if one is not provided manually
+WARNING: Image reference ttl.sh/tp4-devsecops-25b642229dce:2h uses a tag, not a digest, to identify the image to sign.
+    This can lead you to sign a different image than the intended one. Please use a
+    digest (example.com/ubuntu@sha256:abc123...) rather than tag
+    (example.com/ubuntu:latest) for the input to cosign. The ability to refer to
+    images by tag will be removed in a future release.
+
+Signing artifact...
+Pushing signature to: ttl.sh/tp4-devsecops-25b642229dce
+$ cosign verify --key secrets/attacker.pub --insecure-ignore-tlog ttl.sh/tp4-devsecops-25b642229dce:2h | head -c 120; echo
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the signature.
+
+Verification for ttl.sh/tp4-devsecops-25b642229dce:2h --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - The signatures were verified against the specified public key
+
+[{"critical":{"identity":{"docker-reference":"ttl.sh/tp4-devsecops-25b642229dce"},"image":{"docker-manifest-digest":"sh
+$ cosign verify --key cosign.pub ttl.sh/tp4-devsecops-25b642229dce:2h
+Error: no matching signatures: searching log query: [POST /api/v1/log/entries/retrieve][400] searchLogQueryBadRequest {"code":400,"message":"verifying signature: invalid signature when validating ASN.1 encoded signature"}
+error during command execution: no matching signatures: searching log query: [POST /api/v1/log/entries/retrieve][400] searchLogQueryBadRequest {"code":400,"message":"verifying signature: invalid signature when validating ASN.1 encoded signature"}
+$ kubectl apply -f tests/k8s/deploy-manuel.yaml
+Error from server: error when creating "tests/k8s/deploy-manuel.yaml": admission webhook "mutate.kyverno.svc-fail" denied the request: 
+
+resource Deployment/tp4/tp4-app-manuel was blocked due to the following policies 
+
+verify-image-signature:
+  autogen-verify-cosign-signature: 'failed to verify image ttl.sh/tp4-devsecops-25b642229dce:2h: .attestors[0].entries[0].keys: no matching signatures: searching log query: [POST /api/v1/log/entries/retrieve][400] searchLogQueryBadRequest {"code":400,"message":"verifying signature: invalid signature when validating ASN.1 encoded signature"}'
+$ kubectl run pirate -n tp4 --image=ttl.sh/tp4-devsecops-25b642229dce:2h
+Error from server: admission webhook "mutate.kyverno.svc-fail" denied the request: 
+
+resource Pod/tp4/pirate was blocked due to the following policies 
+
+verify-image-signature:
+  verify-cosign-signature: 'failed to verify image ttl.sh/tp4-devsecops-25b642229dce:2h: .attestors[0].entries[0].keys: no matching signatures: searching log query: [POST /api/v1/log/entries/retrieve][400] searchLogQueryBadRequest {"code":400,"message":"verifying signature: invalid signature when validating ASN.1 encoded signature"}'
