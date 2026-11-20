@@ -1,0 +1,34 @@
+name: CI/CD supply chain sécurisée
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------
+  # Étape 1 : détection des secrets (code + tout l'historique Git)
+  # ---------------------------------------------------------------
+  secret-scan:
+    name: secret-scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # historique complet, pas seulement le dernier commit
+      - name: Gitleaks - analyse de tout l'historique des commits
+        run: |
+          docker run --rm -v "$PWD":/repo -w /repo zricethezav/gitleaks:v8.30.1 \
+            git --config .gitleaks.toml --redact --verbose \
+            --report-format json --report-path gitleaks-report.json .
+      - name: Rapport Gitleaks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          if-no-files-found: ignore

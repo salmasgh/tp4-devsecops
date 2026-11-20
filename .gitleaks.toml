@@ -1,0 +1,12 @@
+# Configuration Gitleaks : regles par defaut + exceptions justifiees
+title = "TP4 DevSecOps - gitleaks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Fichiers chiffres par SOPS (valeurs ENC[AES256_GCM,...]) et cle publique cosign"
+paths = [
+  '''k8s/.*\.enc\.yaml$''',
+  '''cosign\.pub$''',
+]
