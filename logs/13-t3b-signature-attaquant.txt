@@ -1,4 +1,4 @@
-$ cosign generate-key-pair --output-key-prefix attacker
+$ cd secrets && cosign generate-key-pair --output-key-prefix attacker && cd ..
 Private key written to attacker.key
 Public key written to attacker.pub
 $ cosign sign --yes --key secrets/attacker.key --tlog-upload=false --new-bundle-format=false --use-signing-config=false ttl.sh/tp4-devsecops-25b642229dce:2h

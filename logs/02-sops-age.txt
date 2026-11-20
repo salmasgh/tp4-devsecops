@@ -1,0 +1,26 @@
+$ cat .sops.yaml | grep -v '^#'
+creation_rules:
+  - path_regex: .*\.enc\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1894eaud5fau50n6vxr695rzppglysm5s9zds8pd7grv3xcy0qpsqj493eh
+$ grep -A1 stringData k8s/secret.enc.yaml
+stringData:
+    secret-key: ENC[AES256_GCM,data:ne5YrTwSf4ujsiP8LVWI6Ov3cZAtrMX+NyYu5rfZx6G+LaqFBwOXHCT2Sw==,iv:HdaYYI55Oocuh4DXIW06m7vnO9WkQUSixcBud+pr6E8=,tag:vnMFzS61359eAMTF+FzDHw==,type:str]
+--
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0
+$ sops -d --extract '["stringData"]["secret-key"]' k8s/secret.enc.yaml | sha256sum | cut -c1-12
+8c999bb1c857
+$ sops -d k8s/secret.enc.yaml   # poste sans la cle privee age
+Failed to get the data key required to decrypt the SOPS file.
+
+Group 0: FAILED
+  age1894eaud5fau50n6vxr695rzppglysm5s9zds8pd7grv3xcy0qpsqj493eh: FAILED
+    - | failed to load age identities. Did not find keys in
+      | locations 'SOPS_AGE_SSH_PRIVATE_KEY_FILE',
+      | 'C:\Users\salma\.ssh\id_ed25519',
+      | 'C:\Users\salma\.ssh\id_rsa', 'SOPS_AGE_KEY',
+      | 'SOPS_AGE_KEY_FILE', 'SOPS_AGE_KEY_CMD', and
+      | 'C:\Windows\Temp\vide\sops\age\keys.txt'.
+
+Recovery failed because no master key was able to decrypt the file. In

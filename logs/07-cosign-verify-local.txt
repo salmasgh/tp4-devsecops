@@ -1,6 +1,6 @@
-$ cosign verify --key cosign.pub ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e
+$ cosign verify --key cosign.pub ghcr.io/salmasgh/tp4-devsecops@sha256:2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b
 
-Verification for ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e --
+Verification for ghcr.io/salmasgh/tp4-devsecops@sha256:2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline
@@ -10,15 +10,15 @@ The following checks were performed on each of these signatures:
   "docker-reference": "ghcr.io/salmasgh/tp4-devsecops"
  },
  "image": {
-  "docker-manifest-digest": "sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e"
+  "docker-manifest-digest": "sha256:2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b"
  },
  "type": "cosign container image signature"
 }
-Bundle.Payload.logIndex: 4024242346
+Rekor logIndex : 4024523854
 
-$ cosign tree ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e
-📦 Supply Chain Security Related artifacts for an image: ghcr.io/salmasgh/tp4-devsecops@sha256:51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e
-└── 💾 Attestations for an image tag: ghcr.io/salmasgh/tp4-devsecops:sha256-51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e.att
-   └── 🍒 sha256:69e7f772cba07935d5ff23210d6efb82c9aacb1b6604100ea75a28b758006a53
-└── 🔐 Signatures for an image tag: ghcr.io/salmasgh/tp4-devsecops:sha256-51654f8f9b54c422e0025624c998b09cff15ea1a151d7997dff1f3bd4463049e.sig
-   └── 🍒 sha256:213ed823d141c59b46bc092cd8d0528582e2fae9fa4fc8e7b30b0654dcc10318
+$ cosign tree ghcr.io/salmasgh/tp4-devsecops@sha256:2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b
+📦 Supply Chain Security Related artifacts for an image: ghcr.io/salmasgh/tp4-devsecops@sha256:2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b
+└── 💾 Attestations for an image tag: ghcr.io/salmasgh/tp4-devsecops:sha256-2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b.att
+   └── 🍒 sha256:f9b81b317eb837e1ad50eb239a5bd8f73317961e09940a51bd1aec59df303914
+└── 🔐 Signatures for an image tag: ghcr.io/salmasgh/tp4-devsecops:sha256-2f36b20d801ac830b1408362fcbb13d229fe3cc62ce11f8380f7ee4f943ef83b.sig
+   └── 🍒 sha256:9919ebf86fd8a49bf3ccc3224e5ab65d7db317b664076200ea851603cc4e2e15

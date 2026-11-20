@@ -1,0 +1,19 @@
+$ kubectl get nodes
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   53m   v1.37.0
+$ helm list -n kyverno
+NAME   	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART        	APP VERSION
+kyverno	kyverno  	1       	2026-11-20 13:10:20.795821 +0100 WAT	deployed	kyverno-3.9.2	v1.19.2    
+$ kubectl get pods -n kyverno
+NAME                                             READY   STATUS    RESTARTS   AGE
+kyverno-admission-controller-75c55c6475-mrdt5    1/1     Running   0          31m
+kyverno-background-controller-7f5648c454-96wwq   1/1     Running   0          31m
+kyverno-cleanup-controller-6b96f7d9b-qc2cp       1/1     Running   0          31m
+kyverno-reports-controller-7866559564-rgb6x      1/1     Running   0          31m
+$ kubectl apply -f policies/
+clusterpolicy.kyverno.io/pod-hardening configured
+clusterpolicy.kyverno.io/verify-image-signature configured
+$ kubectl get clusterpolicy
+NAME                     ADMISSION   BACKGROUND   READY   AGE   MESSAGE
+pod-hardening            true        true         True    30m   Ready
+verify-image-signature   true        false        True    30m   Ready
