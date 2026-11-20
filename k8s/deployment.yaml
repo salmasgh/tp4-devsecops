@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tp4-app
+  namespace: tp4
+  labels: {app: tp4-app}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: tp4-app}
+  template:
+    metadata:
+      labels: {app: tp4-app}
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/salmasgh/tp4-devsecops:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef: {name: tp4-app-secrets, key: secret-key}
+          securityContext:
+            runAsUser: 0
+            privileged: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tp4-app
+  namespace: tp4
+spec:
+  selector: {app: tp4-app}
+  ports:
+    - port: 80
+      targetPort: 8000

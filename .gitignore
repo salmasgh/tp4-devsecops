@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+app.db
+.pytest_cache/
+reports/
+enonce.pdf
+# Cles privees : jamais dans Git (age et cosign)
+*.agekey
+age.key
+cosign.key
+attacker.key
+secrets/
