@@ -1,0 +1,9 @@
+$ git log --all -p | grep -c "tp4k_eMfu"
+0
+$ git show 2d42128:main.py | grep -n API_KEY
+33:API_KEY = "***CLE-REVOQUEE***"
+34:SECRET_KEY = load_secret("SECRET_KEY") or API_KEY
+$ gitleaks git --redact -v .
+12:57PM INF 4 commits scanned.
+12:57PM INF scanned ~19345 bytes (19.34 KB) in 419ms
+12:57PM INF no leaks found

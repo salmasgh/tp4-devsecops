@@ -35,3 +35,39 @@ jobs:
           name: gitleaks-report
           path: gitleaks-report.json
           if-no-files-found: ignore
+
+  # ---------------------------------------------------------------
+  # Étape 2 : analyse IaC des manifestes Kubernetes et du Dockerfile
+  # (avant toute construction d'image)
+  # ---------------------------------------------------------------
+  iac-scan:
+    name: iac-scan (Trivy config + Checkov)
+    needs: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rapports Trivy config et Checkov (JSON)
+        run: |
+          docker run --rm -v "$PWD":/repo -w /repo aquasec/trivy:0.76.2 \
+            config --format json --output trivy-iac.json .
+          docker run --rm -v "$PWD":/repo -w /repo bridgecrew/checkov:latest \
+            -d k8s --framework kubernetes --compact --quiet -o json > checkov.json || true
+          python3 .github/scripts/summary.py iac trivy-iac.json >> "$GITHUB_STEP_SUMMARY"
+          python3 .github/scripts/summary.py checkov checkov.json >> "$GITHUB_STEP_SUMMARY"
+      - name: "Gate Trivy : échec si non-conformité HIGH ou CRITICAL"
+        run: |
+          docker run --rm -v "$PWD":/repo -w /repo aquasec/trivy:0.76.2 \
+            config --severity HIGH,CRITICAL --exit-code 1 .
+      - name: "Gate Checkov : échec si un contrôle Kubernetes échoue"
+        if: always()
+        run: |
+          docker run --rm -v "$PWD":/repo -w /repo bridgecrew/checkov:latest \
+            -d k8s --framework kubernetes --compact
+      - name: Rapports IaC
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iac-reports
+          path: |
+            trivy-iac.json
+            checkov.json

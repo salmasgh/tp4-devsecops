@@ -62,6 +62,25 @@ def iac(path):
             print(f"| `{t}` | {i} | {s} | {title} |")
 
 
+def checkov(path):
+    data = load(path) or {}
+    reports = data if isinstance(data, list) else [data]
+    failed, passed = [], 0
+    for r in reports:
+        res = r.get("results", {})
+        passed += r.get("summary", {}).get("passed", len(res.get("passed_checks", [])))
+        failed += res.get("failed_checks", [])
+    print("## Checkov : bonnes pratiques Kubernetes\n")
+    print(f"Contrôles réussis : **{passed}**, échoués : **{len(failed)}**\n")
+    if not failed:
+        print("**Tous les contrôles Checkov sont conformes.** :white_check_mark:")
+        return
+    print("| Check | Ressource | Fichier | Problème |")
+    print("|---|---|---|---|")
+    for c in failed:
+        print(f"| {c['check_id']} | `{c['resource']}` | `{c['file_path'].lstrip('/')}` | {c['check_name']} |")
+
+
 def image(path, name):
     data = load(path) or {}
     count, rows = Counter(), []
@@ -115,6 +134,8 @@ if __name__ == "__main__":
         gitleaks(sys.argv[2])
     elif kind == "iac":
         iac(sys.argv[2])
+    elif kind == "checkov":
+        checkov(sys.argv[2])
     elif kind == "image":
         image(sys.argv[2], sys.argv[3])
     elif kind == "sbom":
