@@ -1,0 +1,16 @@
+$ kubectl get networkpolicy -n tp4
+NAME               POD-SELECTOR   AGE
+default-deny-all   <none>         8h
+tp4-app            app=tp4-app    8h
+$ kubectl exec -n default np-test -- curl -s -m 5 -o /dev/null -w "%{http_code}\n" http://tp4-app.tp4.svc/health
+000
+$ kubectl delete -f k8s/networkpolicy.yaml
+networkpolicy.networking.k8s.io "default-deny-all" deleted
+networkpolicy.networking.k8s.io "tp4-app" deleted
+$ kubectl exec -n default np-test -- curl -s -m 5 -o /dev/null -w "%{http_code}\n" http://tp4-app.tp4.svc/health
+200
+$ kubectl apply -f k8s/networkpolicy.yaml
+networkpolicy.networking.k8s.io/default-deny-all created
+networkpolicy.networking.k8s.io/tp4-app created
+$ kubectl exec -n default np-test -- curl -s -m 5 -o /dev/null -w "%{http_code}\n" http://tp4-app.tp4.svc/health
+000
